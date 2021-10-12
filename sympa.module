@@ -7,6 +7,7 @@
 
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
@@ -36,10 +37,11 @@ function sympa_entity_presave(EntityInterface $entity) {
     $get_fields = $entity->getFields();
     $sympa_send = $get_fields['field_sympa_send']->getValue();
     if ($sympa_send[0]['value'] == 1) {
-      $sympa_body = $get_fields['body']->getValue();
+      $sympa_body = Xss::filter($get_fields['body']->getValue());
       $sympa_nid = $entity->id();
-      $sympa_title = $entity->gettitle();
-      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body);
+      $sympa_title = Xss::filter($entity->gettitle());
+      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
+      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
       $entity->set('field_sympa_send', 0);
     }
@@ -58,7 +60,8 @@ function sympa_node_insert(EntityInterface $entity) {
       $sympa_body = $get_fields['body']->getValue();
       $sympa_nid = $entity->id();
       $sympa_title = $entity->gettitle();
-      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body);
+      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
+      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
       $entity->set('field_sympa_send', 0);
     }
@@ -66,9 +69,9 @@ function sympa_node_insert(EntityInterface $entity) {
 }
 
 /**
- * Build Email.
+ * Build Sympa Email.
  */
-function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body) {
+function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $service) {
   $options = ['absolute' => TRUE];
   $here = Url::fromRoute('entity.node.canonical', ['node' => $sympa_nid], $options);
   $more_info = Url::fromRoute('entity.node.canonical', ['node' => 2514], $options);
@@ -76,6 +79,8 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body) {
   $unsubscribe_sa = Url::fromUri('internal:/sympa/unsubscribe/service_alerts');
   $config = \Drupal::config('system.site');
   $body_stripped = isset($sympa_body[0]['value']) ? preg_replace("/<img[^>]+\>/i", " ", $sympa_body[0]['value']) : '';
+  $unsubscribe = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_news)->toString() : '';
+  $learn = $service == 'sympa' ? Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString() : '';
   $body_news = sprintf(
     '%s
     <p>%s</p>
@@ -89,8 +94,8 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body) {
     Link::fromTextAndUrl(t('View news story here'), $here)->toString(),
     t('This is an automated message from'),
     $config->get('name'),
-    Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_news)->toString(),
-    Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString()
+    $unsubscribe,
+    $learn
   );
   $body_sa = sprintf(
     '<h2>%s</h2>
@@ -111,14 +116,27 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body) {
     Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString()
   );
   $env = getenv('AH_SITE_ENVIRONMENT');
-  if ($env == 'prod') {
-    $to_sa = 'oit-service-alert@lists.colorado.edu';
-    $to_news = 'oit-news@lists.colorado.edu';
-    $to_email = $type == 'service_alert' ? $to_sa : $to_news;
-  } else{
-    $to_email = 'oit-web-test@lists.colorado.edu';
-  }
+  switch ($service) {
+    case "sympa":
+      if ($env == 'prod') {
+        $to_sa = 'oit-service-alert@lists.colorado.edu';
+        $to_news = 'oit-news@lists.colorado.edu';
+        $to_email = $type == 'service_alert' ? $to_sa : $to_news;
+      }
+      else {
+        $to_email = 'oit-web-test@lists.colorado.edu';
+      }
+      break;
 
+    case "distribution_list":
+      if ($env == 'prod') {
+        $to_email = "OIT-DL-ITDC@colorado.edu";
+      }
+      else {
+        $to_email = 'OIT-DL-ITDC@colorado.edu';
+      }
+      break;
+  }
   $params = [];
   $params['to'] = $to_email;
   $params['body'] = $type == 'service_alert' ? $body_sa : $body_news;
