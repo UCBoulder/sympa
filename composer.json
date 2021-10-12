@@ -1,0 +1,9 @@
+{
+  "name": "oit/sympa",
+  "type": "drupal-custom-module",
+  "description": "Emails service alerts and news when box is checked.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://github.com/UCBoulder/sympa",
+  "minimum-stability": "dev"
+}
