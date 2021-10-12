@@ -75,11 +75,12 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
   $options = ['absolute' => TRUE];
   $here = Url::fromRoute('entity.node.canonical', ['node' => $sympa_nid], $options);
   $more_info = Url::fromRoute('entity.node.canonical', ['node' => 2514], $options);
-  $unsubscribe_news = Url::fromUri('internal:/sympa/unsubscribe/news');
+  $unsubscribe_n = Url::fromUri('internal:/sympa/unsubscribe/news');
   $unsubscribe_sa = Url::fromUri('internal:/sympa/unsubscribe/service_alerts');
   $config = \Drupal::config('system.site');
   $body_stripped = isset($sympa_body[0]['value']) ? preg_replace("/<img[^>]+\>/i", " ", $sympa_body[0]['value']) : '';
-  $unsubscribe = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_news)->toString() : '';
+  $unsubscribe_news = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_n)->toString() : '';
+  $unsubscribe_service_alert = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_sa)->toString() : '';
   $learn = $service == 'sympa' ? Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString() : '';
   $body_news = sprintf(
     '%s
@@ -94,7 +95,7 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
     Link::fromTextAndUrl(t('View news story here'), $here)->toString(),
     t('This is an automated message from'),
     $config->get('name'),
-    $unsubscribe,
+    $unsubscribe_news,
     $learn
   );
   $body_sa = sprintf(
@@ -112,8 +113,8 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
     Link::fromTextAndUrl(t('View full service alert here'), $here)->toString(),
     t('This is an automated message from'),
     $config->get('name'),
-    Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_sa)->toString(),
-    Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString()
+    $unsubscribe_service_alert,
+    $learn
   );
   $env = getenv('AH_SITE_ENVIRONMENT');
   switch ($service) {
