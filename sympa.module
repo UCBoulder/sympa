@@ -37,7 +37,7 @@ function sympa_entity_presave(EntityInterface $entity) {
     $get_fields = $entity->getFields();
     $sympa_send = $get_fields['field_sympa_send']->getValue();
     if ($sympa_send[0]['value'] == 1) {
-      $sympa_body = Xss::filter($get_fields['body']->getValue());
+      $sympa_body = $get_fields['body']->getValue();
       $sympa_nid = $entity->id();
       $sympa_title = Xss::filter($entity->gettitle());
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
@@ -59,7 +59,7 @@ function sympa_node_insert(EntityInterface $entity) {
     if ($sympa_send[0]['value'] == 1) {
       $sympa_body = $get_fields['body']->getValue();
       $sympa_nid = $entity->id();
-      $sympa_title = $entity->gettitle();
+      $sympa_title = Xss::filter($entity->gettitle());
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
@@ -78,7 +78,8 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
   $unsubscribe_n = Url::fromUri('internal:/sympa/unsubscribe/news');
   $unsubscribe_sa = Url::fromUri('internal:/sympa/unsubscribe/service_alerts');
   $config = \Drupal::config('system.site');
-  $body_stripped = isset($sympa_body[0]['value']) ? preg_replace("/<img[^>]+\>/i", " ", $sympa_body[0]['value']) : '';
+  $body_xss = isset($sympa_body[0]['value']) ? Xss::filter($sympa_body[0]['value']) : NULL;
+  $body_stripped = $body_xss ? preg_replace("/<img[^>]+\>/i", " ", $body_xss) : '';
   $unsubscribe_news = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_n)->toString() : '';
   $unsubscribe_service_alert = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_sa)->toString() : '';
   $learn = $service == 'sympa' ? Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString() : '';
