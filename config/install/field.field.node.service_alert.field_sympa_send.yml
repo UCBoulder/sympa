@@ -1,0 +1,23 @@
+uuid: 1045a958-b47b-4ae9-b184-99612585fd46
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sympa_send
+    - node.type.service_alert
+id: node.service_alert.field_sympa_send
+field_name: field_sympa_send
+entity_type: node
+bundle: service_alert
+label: 'Sympa Send'
+description: 'Check this box to send updates to users subscribed to the mailing list.'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: Send
+  off_label: 'No Send'
+field_type: boolean

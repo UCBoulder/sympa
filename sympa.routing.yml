@@ -1,0 +1,6 @@
+sympa.sympa_news_subscribe:
+  path: '/sympa/{first}/{second}'
+  defaults:
+    _controller: '\Drupal\sympa\Controller\SympaController::arguments'
+  requirements:
+    _role: 'authenticated'

@@ -1,0 +1,140 @@
+<?php
+
+/**
+ * @file
+ * Sympa module.
+ */
+
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_mail().
+ */
+function sympa_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'subscriptions':
+      $message['from'] = \Drupal::config('system.site')->get('mail');
+      $message['body'][] = $params['action'] . ' ' . $params['type'] . ' ' . $params['email'] . ' ' . $params['name'];
+      break;
+
+    case 'node-update':
+      $message['from'] = \Drupal::config('system.site')->get('mail');
+      $message['subject'] = $params['title'];
+      $message['body'][] = $params['body'];
+      break;
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function sympa_entity_presave(EntityInterface $entity) {
+  $type = $entity->bundle();
+  if ((!$entity->isNew()) && ($entity->getEntityType()->id() == 'node') && ($type == 'news' || $type == 'service_alert')) {
+    $get_fields = $entity->getFields();
+    $sympa_send = $get_fields['field_sympa_send']->getValue();
+    if ($sympa_send[0]['value'] == 1) {
+      $sympa_body = $get_fields['body']->getValue();
+      $sympa_nid = $entity->id();
+      $sympa_title = $entity->gettitle();
+      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body);
+      // See if checked set to the default of 0 below.
+      $entity->set('field_sympa_send', 0);
+    }
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function sympa_node_insert(EntityInterface $entity) {
+  $type = $entity->bundle();
+  if ($type == 'news' || $type == 'service_alert') {
+    $get_fields = $entity->getFields();
+    $sympa_send = $get_fields['field_sympa_send']->getValue();
+    if ($sympa_send[0]['value'] == 1) {
+      $sympa_body = $get_fields['body']->getValue();
+      $sympa_nid = $entity->id();
+      $sympa_title = $entity->gettitle();
+      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body);
+      // See if checked set to the default of 0 below.
+      $entity->set('field_sympa_send', 0);
+    }
+  }
+}
+
+/**
+ * Build Email.
+ */
+function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body) {
+  $options = ['absolute' => TRUE];
+  $here = Url::fromRoute('entity.node.canonical', ['node' => $sympa_nid], $options);
+  $more_info = Url::fromRoute('entity.node.canonical', ['node' => 2514], $options);
+  $unsubscribe_news = Url::fromUri('internal:/sympa/unsubscribe/news');
+  $unsubscribe_sa = Url::fromUri('internal:/sympa/unsubscribe/service_alerts');
+  $config = \Drupal::config('system.site');
+  $body_stripped = isset($sympa_body[0]['value']) ? preg_replace("/<img[^>]+\>/i", " ", $sympa_body[0]['value']) : '';
+  $body_news = sprintf(
+    '%s
+    <p>%s</p>
+    <br /><br />
+    ---------
+    <br /><br />
+    <p>%s %s</p>
+    <p>%s</p>
+    <p>%s</p>',
+    $body_stripped,
+    Link::fromTextAndUrl(t('View news story here'), $here)->toString(),
+    t('This is an automated message from'),
+    $config->get('name'),
+    Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_news)->toString(),
+    Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString()
+  );
+  $body_sa = sprintf(
+    '<h2>%s</h2>
+    %s
+    <p>%s</p>
+    <br /><br />
+    ---------
+    <br /><br />
+    <p>%s %s</p>
+    <p>%s</p>
+    <p>%s</p>',
+    $sympa_title,
+    $body_stripped,
+    Link::fromTextAndUrl(t('View full service alert here'), $here)->toString(),
+    t('This is an automated message from'),
+    $config->get('name'),
+    Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_sa)->toString(),
+    Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString()
+  );
+  $env = getenv('AH_SITE_ENVIRONMENT');
+  if ($env == 'prod') {
+    $to_sa = 'oit-service-alert@lists.colorado.edu';
+    $to_news = 'oit-news@lists.colorado.edu';
+    $to_email = $type == 'service_alert' ? $to_sa : $to_news;
+  } else{
+    $to_email = 'oit-web-test@lists.colorado.edu';
+  }
+
+  $params = [];
+  $params['to'] = $to_email;
+  $params['body'] = $type == 'service_alert' ? $body_sa : $body_news;
+  $params['title'] = $sympa_title;
+  sympa_send('node-update', $params);
+}
+
+/**
+ * Send email.
+ */
+function sympa_send($key, $params) {
+  $to = $params['to'];
+  $langcode = \Drupal::currentUser()->getPreferredLangcode();
+  $send = TRUE;
+  $module = 'sympa';
+  $mailManager = \Drupal::service('plugin.manager.mail');
+  $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+  return $result;
+}

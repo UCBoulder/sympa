@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the sympa_initialize module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function sympa_install() {
+  \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->load('node.news.default')
+    ->setComponent('field_sympa_send', [
+      'type' => 'boolean_checkbox',
+      'settings' => [],
+    ])->save();
+  \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->load('node.service_alert.default')
+    ->setComponent('field_sympa_send', [
+      'type' => 'boolean_checkbox',
+      'settings' => [],
+    ])->save();
+}
