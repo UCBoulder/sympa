@@ -126,7 +126,7 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
         $to_email = $type == 'service_alert' ? $to_sa : $to_news;
       }
       else {
-        $to_email = 'oit-web-test@lists.colorado.edu';
+        $to_email = 'oit-web-test@colorado.edu';
       }
       break;
 
