@@ -121,8 +121,8 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
   switch ($service) {
     case "sympa":
       if ($env == 'prod') {
-        $to_sa = 'oit-service-alert@lists.colorado.edu';
-        $to_news = 'oit-news@lists.colorado.edu';
+        $to_sa = 'oit-service-alert@colorado.edu';
+        $to_news = 'oit-news@colorado.edu';
         $to_email = $type == 'service_alert' ? $to_sa : $to_news;
       }
       else {
