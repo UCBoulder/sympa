@@ -1,0 +1,13 @@
+name: (M) Create Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag next major/minor release. Use 1.x.x scheme. Leave default iterate to auto tag the next patch version.'
+        required: true
+        default: 'iterate'
+permissions:
+  contents: write
+jobs:
+  release:
+    uses: UCBoulder/oitid_reusable_actions/.github/workflows/releases.yml@main
