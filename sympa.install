@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the sympa_initialize module.
  */
 
+use Drupal\block_content\Entity\BlockContent;
+
 /**
  * Implements hook_install().
  */
@@ -23,4 +25,31 @@ function sympa_install() {
       'type' => 'boolean_checkbox',
       'settings' => [],
     ])->save();
+}
+
+/**
+ * Implements hook_update().
+ */
+function sympa_update_9000() {
+  // Update block entity 41 body field with blarg.
+  $sa_block = BlockContent::load(41);
+  $sa_body = '<p>
+    Need to stay on top of any Service Alerts as soon as they happen? Get them as soon as they come out straight to your inbox, click below to instantly subscribe using your CU Boulder email.
+</p>
+<p>
+    <a class="icon button" href="/gg/subscribe/service_alert">[svg name=notify-skinny width=20 color=fff][/svg] Subscribe Now</a>
+</p>';
+  $sa_block->set('body', [
+    'value' => $sa_body,
+    'format' => 'rich_text',
+  ])->save();
+  // Update news subscription block.
+  $news_block = BlockContent::load(36);
+  $news_body = '<p>
+    <a class="icon button" href="/gg/subscribe/news">[svg name=notify-skinny width=20 color=fff][/svg] Subscribe Now</a>
+</p>';
+  $news_block->set('body', [
+    'value' => $news_body,
+    'format' => 'rich_text',
+  ])->save();
 }
