@@ -117,24 +117,23 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
     $unsubscribe_service_alert,
     $learn
   );
-  $env = getenv('AH_SITE_ENVIRONMENT');
+  $config = \Drupal::config('sympa.settings');
+  $prod_email = $config->get('sympa_email_prod');
   switch ($service) {
     case "sympa":
-      if ($env == 'prod') {
+      if ($prod_email) {
         $to_sa = 'oit-service-alert@colorado.edu';
         $to_news = 'oit-news@colorado.edu';
         $to_email = $type == 'service_alert' ? $to_sa : $to_news;
-      }
-      else {
+      } else {
         $to_email = 'oit-web-test@colorado.edu';
       }
       break;
 
     case "distribution_list":
-      if ($env == 'prod') {
+      if ($prod_email) {
         $to_email = "OIT-DL-ITDC@colorado.edu";
-      }
-      else {
+      } else {
         $to_email = 'OIT-DL-OIT-site-test@colorado.edu';
       }
       break;

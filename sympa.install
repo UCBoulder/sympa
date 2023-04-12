@@ -53,3 +53,11 @@ function sympa_update_9000() {
     'format' => 'rich_text',
   ])->save();
 }
+
+/**
+ * Implements hook_update().
+ */
+function sympa_update_9001() {
+  $config = \Drupal::configFactory()->getEditable('sympa.settings');
+  $config->set('sympa_email_prod', TRUE)->save();
+}
