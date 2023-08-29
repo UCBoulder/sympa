@@ -16,9 +16,8 @@ jobs:
         run: echo "BRANCH=$(echo $GITHUB_REF | awk -F / '{print $3}')" >> $GITHUB_ENV
       - name: Trigger Tests
         run: |
-          echo $BRANCH
-          echo $REPO
-          gh workflow run codetesting.yml -f modules=oit -f phpstan_level=0 -R UCBoulder/oit_dingo
+          echo "Testing $REPO on branch $BRANCH"
+          gh workflow run codetesting.yml -f modules=$REPO -f phpstan_level=0 -f branch=$BRANCH -R UCBoulder/oit_dingo
         env:
           GH_TOKEN: ${{ secrets.RALPHIE_TOKEN }}
           REPO: ${{ github.event.repository.name }}
