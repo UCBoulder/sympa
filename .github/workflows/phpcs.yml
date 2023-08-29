@@ -17,7 +17,7 @@ jobs:
       - name: Trigger Tests
         run: |
           echo "Testing $REPO on branch $BRANCH"
-          gh workflow run codetesting.yml -f modules=$REPO -f phpstan_level=0 -f branch=$BRANCH -R UCBoulder/oit_dingo
+          gh workflow run codetesting.yml -f modules="['$REPO']" -f phpstan_level=0 -f branch=$BRANCH -R UCBoulder/oit_dingo
         env:
           GH_TOKEN: ${{ secrets.RALPHIE_TOKEN }}
           REPO: ${{ github.event.repository.name }}
