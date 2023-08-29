@@ -21,4 +21,4 @@ jobs:
           gh workflow run codetesting.yml -f modules=oit -f phpstan_level=0 -R UCBoulder/oit_dingo
         env:
           GH_TOKEN: ${{ secrets.RALPHIE_TOKEN }}
-          $REPO: ${{ github.event.repository.name }}
+          REPO: ${{ github.event.repository.name }}
