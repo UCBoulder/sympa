@@ -3,8 +3,15 @@ on:
   push:
     branches:
       - '*'
+permissions:
+  actions: read
+  contents: write
 jobs:
-  deploy:
-    uses: UCBoulder/oitid_reusable_actions/.github/workflows/phpcs.yml@main
-    secrets:
-      phpstan_level: "0"
+  build:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Composer install
+        run: |
+          gh workflow run codetesting.yml -f modules=oit -f phpstan_level=0 -R UCBoulder/oit_dingo

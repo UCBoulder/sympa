@@ -2,16 +2,16 @@
 
 namespace Drupal\sympa\Controller;
 
-use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\Core\Controller\ControllerBase;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Drupal\Core\Link;
+use Drupal\Core\Mail\MailManager;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\Mail\MailManager;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Controller routines for sympa routes.
