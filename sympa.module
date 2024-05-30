@@ -76,7 +76,7 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
   $here = Url::fromRoute('entity.node.canonical', ['node' => $sympa_nid], $options);
   $more_info = Url::fromRoute('entity.node.canonical', ['node' => 2514], $options);
   $unsubscribe_n = Url::fromUri('internal:/sympa/unsubscribe/news');
-  $unsubscribe_sa = Url::fromUri('internal:/sympa/unsubscribe/service_alerts');
+  $unsubscribe_sa = Url::fromUri('internal:/sympa/unsubscribe/service_alert');
   $config = \Drupal::config('system.site');
   $body_xss = isset($sympa_body[0]['value']) ? Xss::filterAdmin($sympa_body[0]['value']) : NULL;
   $body_stripped = $body_xss ? preg_replace("/<img[^>]+\>/i", " ", $body_xss) : '';
