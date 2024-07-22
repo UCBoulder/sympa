@@ -69,7 +69,7 @@ class SympaController extends ControllerBase {
     RequestStack $request_stack,
     MessengerInterface $messenger,
     AccountProxyInterface $account,
-    MailManager $mail_manager
+    MailManager $mail_manager,
   ) {
     $this->requestStack = $request_stack;
     $this->messengerInterface = $messenger;
