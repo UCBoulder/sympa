@@ -1,4 +1,0 @@
-sympa.sympa_news_subscribe:
-  title: Sympa News Subscribe
-  description: 'Subscribe to News'
-  route_name: sympa.sympa_news_subscribe
