@@ -39,7 +39,7 @@ function sympa_entity_presave(EntityInterface $entity) {
     if ($sympa_send[0]['value'] == 1) {
       $sympa_body = $get_fields['body']->getValue();
       $sympa_nid = $entity->id();
-      $sympa_title = Xss::filter($entity->gettitle());
+      $sympa_title = $entity->gettitle();
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
@@ -59,7 +59,7 @@ function sympa_node_insert(EntityInterface $entity) {
     if ($sympa_send[0]['value'] == 1) {
       $sympa_body = $get_fields['body']->getValue();
       $sympa_nid = $entity->id();
-      $sympa_title = Xss::filter($entity->gettitle());
+      $sympa_title = $entity->gettitle();
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
