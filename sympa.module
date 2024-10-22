@@ -17,11 +17,17 @@ function sympa_mail($key, &$message, $params) {
   switch ($key) {
     case 'subscriptions':
       $message['from'] = \Drupal::config('system.site')->get('mail');
+      $message['headers'] = [
+        'reply-To' => 'no-reply@colorado.edu',
+      ];
       $message['body'][] = $params['action'] . ' ' . $params['type'] . ' ' . $params['email'] . ' ' . $params['name'];
       break;
 
     case 'node-update':
       $message['from'] = \Drupal::config('system.site')->get('mail');
+      $message['headers'] = [
+        'reply-To' => 'no-reply@colorado.edu',
+      ];
       $message['subject'] = $params['title'];
       $message['body'][] = $params['body'];
       break;
