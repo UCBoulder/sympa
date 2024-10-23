@@ -40,18 +40,32 @@ function sympa_mail($key, &$message, $params) {
 function sympa_entity_presave(EntityInterface $entity) {
   $type = $entity->bundle();
   if ((!$entity->isNew()) && ($entity->getEntityType()->id() == 'node') && ($type == 'news' || $type == 'service_alert')) {
+    sympa_node_email_send($entity);
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function sympa_node_insert(EntityInterface $entity) {
+  $type = $entity->bundle();
+  if ($type == 'news' || $type == 'service_alert') {
+    sympa_node_email_send($entity);
+  }
+}
+
+function sympa_node_email_send($entity) {
     $get_fields = $entity->getFields();
     $sympa_send = $get_fields['field_sympa_send']->getValue();
     if ($sympa_send[0]['value'] == 1) {
       $sympa_body = $get_fields['body']->getValue();
       $sympa_nid = $entity->id();
-      $sympa_title = $entity->gettitle();
+      $sympa_title = $entity->get('field_service_alert_status')->getValue()[0]['value'] . ": " . $entity->gettitle();
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
       $entity->set('field_sympa_send', 0);
     }
-  }
 }
 
 /**
