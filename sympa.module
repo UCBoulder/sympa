@@ -39,7 +39,7 @@ function sympa_mail($key, &$message, $params) {
  */
 function sympa_entity_presave(EntityInterface $entity) {
   $type = $entity->bundle();
-  if (($entity->getEntityType()->id() == 'node') && ($type == 'news' || $type == 'service_alert')) {
+  if ((strpos($entity->getTitle(), '%AutoEntityLabel') === FALSE) && ($entity->getEntityType()->id() == 'node') && ($type == 'news' || $type == 'service_alert')) {
     $get_fields = $entity->getFields();
     $sympa_send = $get_fields['field_sympa_send']->getValue();
     if ($sympa_send[0]['value'] == 1) {
