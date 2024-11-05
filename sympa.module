@@ -61,7 +61,13 @@ function sympa_node_email_send($entity) {
     if ($sympa_send[0]['value'] == 1) {
       $sympa_body = $get_fields['body']->getValue();
       $sympa_nid = $entity->id();
-      $sympa_title = $entity->get('field_service_alert_status')->getValue()[0]['value'] . ": " . $entity->gettitle();
+      // Get entity type.
+      $type = $entity->bundle();
+      if ($type == 'service_alert') {
+        $sympa_title = $entity->get('field_service_alert_status')->getValue()[0]['value'] . ": " . $entity->gettitle();
+      } else {
+        $sympa_title = $entity->gettitle();
+      }
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
