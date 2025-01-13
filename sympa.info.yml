@@ -1,4 +1,4 @@
 name: 'Sympa'
 type: module
 description: 'Subscribe to mailing lists via Sympa'
-core_version_requirement: ^9.4 || ^10
+core_version_requirement: ^10 || ^11
