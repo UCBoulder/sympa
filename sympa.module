@@ -9,6 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Component\Utility\Html;
 
 /**
  * Implements hook_mail().
@@ -60,6 +61,7 @@ function sympa_node_email_send($entity) {
     $sympa_send = $get_fields['field_sympa_send']->getValue();
     if ($sympa_send[0]['value'] == 1) {
       $sympa_body = $get_fields['body']->getValue();
+      $sympa_body[0]['value'] = Html::transformRootRelativeUrlsToAbsolute($sympa_body[0]['value'], \Drupal::request()->getSchemeAndHttpHost());
       $sympa_nid = $entity->id();
       // Get entity type.
       $type = $entity->bundle();
