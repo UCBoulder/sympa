@@ -154,7 +154,6 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
   $params['to'] = $to_email;
   $params['body'] = $type == 'service_alert' ? $body_sa : $body_news;
   $params['title'] = $sympa_title;
-  $params['subject'] = $sympa_title;
   sympa_send('node-update', $params);
 }
 
