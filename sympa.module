@@ -20,6 +20,7 @@ function sympa_mail($key, &$message, $params) {
       $message['from'] = \Drupal::config('system.site')->get('mail');
       $message['headers'] = [
         'reply-To' => 'no-reply@colorado.edu',
+        'Content-Type' => 'text/html; charset=UTF-8;',
       ];
       $message['body'][] = $params['action'] . ' ' . $params['type'] . ' ' . $params['email'] . ' ' . $params['name'];
       break;
@@ -28,6 +29,7 @@ function sympa_mail($key, &$message, $params) {
       $message['from'] = \Drupal::config('system.site')->get('mail');
       $message['headers'] = [
         'reply-To' => 'no-reply@colorado.edu',
+        'Content-Type' => 'text/html; charset=UTF-8;',
       ];
       $message['subject'] = $params['title'];
       $message['body'][] = $params['body'];
