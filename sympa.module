@@ -73,7 +73,6 @@ function sympa_node_email_send($entity) {
         $sympa_title = $entity->gettitle();
       }
       sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
-      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'distribution_list');
       // See if checked set to the default of 0 below.
       $entity->set('field_sympa_send', 0);
     }
@@ -139,14 +138,6 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
         $to_email = $type == 'service_alert' ? $to_sa : $to_news;
       } else {
         $to_email = 'oit-web-test@colorado.edu';
-      }
-      break;
-
-    case "distribution_list":
-      if ($prod_email) {
-        $to_email = "OIT-DL-ITDC@colorado.edu";
-      } else {
-        $to_email = 'OIT-DL-OIT-site-test@colorado.edu';
       }
       break;
   }
