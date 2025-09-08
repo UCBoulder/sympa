@@ -75,9 +75,10 @@ function sympa_node_email_send($entity) {
         $sympa_title = $entity->gettitle();
         $hero_image = $entity->get('field_news_front_image')->getValue();
         $style = ImageStyle::load('fn_large');
+        $host = \Drupal::request()->getSchemeAndHttpHost();
         if ($hero_image) {
-          $uri = $hero_image[0]['target_id'] ? \Drupal\file\Entity\File::load($hero_image[0]['target_id'])->getFileUri() : NULL;
-          $url = $uri ? $style->buildUrl($uri) : NULL;
+          $image_name = $hero_image[0]['target_id'] ? \Drupal\file\Entity\File::load($hero_image[0]['target_id'])->filename->value : NULL;
+          $url = $image_name ? $host . '/sites/default/files/styles/fn_large/public/front_news/' . $image_name : NULL;
           if ($url) {
             $img_tag = '<img src="' . $url . '" alt="' . $entity->get('field_news_front_image')->alt . '" style="max-width:100%;height:auto;" /><br /><br />';
           }
