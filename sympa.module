@@ -9,6 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\Component\Utility\Html;
 
 /**
@@ -61,6 +62,7 @@ function sympa_node_email_send($entity) {
     $type = $entity->bundle();
     $get_fields = $entity->getFields();
     $sympa_send = $get_fields['field_sympa_send']->getValue();
+    $img_tag = '';
     if ($sympa_send[0]['value'] == 1) {
       $sympa_body = $get_fields['body']->getValue();
       $sympa_body[0]['value'] = Html::transformRootRelativeUrlsToAbsolute($sympa_body[0]['value'], \Drupal::request()->getSchemeAndHttpHost());
@@ -71,8 +73,17 @@ function sympa_node_email_send($entity) {
         $sympa_title = $entity->get('field_service_alert_status')->getValue()[0]['value'] . ": " . $entity->gettitle();
       } else {
         $sympa_title = $entity->gettitle();
+        $hero_image = $entity->get('field_news_front_image')->getValue();
+        $style = ImageStyle::load('fn_large');
+        if ($hero_image) {
+          $uri = $hero_image[0]['target_id'] ? \Drupal\file\Entity\File::load($hero_image[0]['target_id'])->getFileUri() : NULL;
+          $url = $uri ? $style->buildUrl($uri) : NULL;
+          if ($url) {
+            $img_tag = '<img src="' . $url . '" alt="' . $entity->get('field_news_front_image')->alt . '" style="max-width:100%;height:auto;" /><br /><br />';
+          }
+        }
       }
-      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, 'sympa');
+      sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $img_tag, 'sympa');
       // See if checked set to the default of 0 below.
       $entity->set('field_sympa_send', 0);
     }
@@ -81,7 +92,7 @@ function sympa_node_email_send($entity) {
 /**
  * Build Sympa Email.
  */
-function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $service) {
+function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $img_tag, $service) {
   $options = ['absolute' => TRUE];
   $here = Url::fromRoute('entity.node.canonical', ['node' => $sympa_nid], $options);
   $more_info = Url::fromRoute('entity.node.canonical', ['node' => 2514], $options);
@@ -91,11 +102,13 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
   $config = \Drupal::config('system.site');
   $body_xss = isset($sympa_body[0]['value']) ? Xss::filterAdmin($sympa_body[0]['value']) : NULL;
   $body_stripped = $body_xss ? preg_replace("/<img[^>]+\>/i", " ", $body_xss) : '';
+  $hero_image = $img_tag ? $img_tag : '';
   $unsubscribe_news = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_n)->toString() : '';
   $unsubscribe_service_alert = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_sa)->toString() : '';
   $learn = $service == 'sympa' ? Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString() : '';
   $body_news = sprintf(
-    '%s
+    '<div>%s</div>
+    %s
     <p>%s</p>
     <br /><br />
     ---------
@@ -103,6 +116,7 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $servic
     <p>%s %s</p>
     <p>%s</p>
     <p>%s</p>',
+    $hero_image,
     $body_stripped,
     Link::fromTextAndUrl(t('View news story here'), $here)->toString(),
     t('This is an automated message from'),
