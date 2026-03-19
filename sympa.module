@@ -73,14 +73,21 @@ function sympa_node_email_send($entity) {
         $sympa_title = $entity->get('field_service_alert_status')->getValue()[0]['value'] . ": " . $entity->gettitle();
       } else {
         $sympa_title = $entity->gettitle();
-        $hero_image = $entity->get('field_news_front_image')->getValue();
         $style = ImageStyle::load('fn_large');
-        $host = \Drupal::request()->getSchemeAndHttpHost();
-        if ($hero_image) {
-          $image_name = $hero_image[0]['target_id'] ? \Drupal\file\Entity\File::load($hero_image[0]['target_id'])->filename->value : NULL;
-          $url = $image_name ? $host . '/sites/default/files/styles/fn_large/public/front_news/' . $image_name : NULL;
-          if ($url) {
-            $img_tag = '<img src="' . $url . '" alt="' . $entity->get('field_news_front_image')->alt . '" style="max-width:100%;height:auto;" /><br /><br />';
+        if (!$entity->get('field_media_hero_image')->isEmpty()) {
+          $media_id = $entity->get('field_media_hero_image')->getValue()[0]['target_id'];
+          $media = \Drupal::entityTypeManager()->getStorage('media')->load($media_id);
+          if ($media && !$media->get('field_media_image_2')->isEmpty()) {
+            $image_field = $media->get('field_media_image_2');
+            $file_id = $image_field->getValue()[0]['target_id'];
+            $alt = $image_field->alt ?? '';
+            $file = \Drupal\file\Entity\File::load($file_id);
+            if ($file && $style) {
+              $url = $style->buildUrl($file->getFileUri());
+              if ($url) {
+                $img_tag = '<img src="' . $url . '" alt="' . $alt . '" style="max-width:100%;height:auto;" /><br /><br />';
+              }
+            }
           }
         }
       }
