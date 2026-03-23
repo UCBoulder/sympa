@@ -86,7 +86,7 @@ function sympa_node_email_send($entity) {
               $derived_uri = $style->buildUri($file->getFileUri());
               if ($derived_uri) {
                 $url = \Drupal::service('file_url_generator')->generateAbsoluteString($derived_uri);
-                $img_tag = '<img src="' . $url . '" alt="' . $alt . '" style="max-width:100%;height:auto;" /><br /><br />';
+                $img_tag = '<img src="' . Html::escape($url) . '" alt="' . Html::escape($alt) . '" style="max-width:100%;height:auto;" /><br /><br />';
               }
             }
           }
