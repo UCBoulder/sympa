@@ -24,7 +24,7 @@ function sympa_mail($key, &$message, $params) {
       $message['headers'] = [
         'From' => $message['from'],
         'Reply-To' => 'no-reply@colorado.edu',
-        'Content-Type' => 'text/html; charset=UTF-8;',
+        'Content-Type' => 'text/html; charset=UTF-8',
       ] + $message['headers'];
       $message['body'][] = $params['action'] . ' ' . $params['type'] . ' ' . $params['email'] . ' ' . $params['name'];
       break;
@@ -34,7 +34,7 @@ function sympa_mail($key, &$message, $params) {
       $message['headers'] = [
         'From' => $message['from'],
         'Reply-To' => 'no-reply@colorado.edu',
-        'Content-Type' => 'text/html; charset=UTF-8;',
+        'Content-Type' => 'text/html; charset=UTF-8',
       ] + $message['headers'];
       $message['subject'] = $params['title'];
       $message['body'][] = $params['body'];
@@ -185,6 +185,11 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $img_ta
  */
 function sympa_send($key, $params) {
   $to = $params['to'];
+  // Symfony Mailer Lite reads these params ahead of the Content-Type header,
+  // so the HTML body and plain-text alternative survive regardless of the
+  // symfony_mailer_lite.message defaults.
+  $params['content_type'] = 'text/html';
+  $params['generate_plain'] = TRUE;
   $langcode = \Drupal::currentUser()->getPreferredLangcode();
   $send = TRUE;
   $module = 'sympa';
