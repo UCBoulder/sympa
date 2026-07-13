@@ -10,6 +10,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Component\Utility\Html;
 
@@ -173,7 +174,7 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $img_ta
   }
   $params = [];
   $params['to'] = $to_email;
-  $params['body'] = $type == 'service_alert' ? $body_sa : $body_news;
+  $params['body'] = Markup::create($type == 'service_alert' ? $body_sa : $body_news);
   $params['title'] = $sympa_title;
   sympa_send('node-update', $params);
   \Drupal::logger('sympa')->notice('Sympa email sent to: ' . $to_email . ' regarding node: ' . $sympa_nid);
