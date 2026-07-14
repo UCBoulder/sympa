@@ -1,0 +1,31 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a Sympa notification email body.
+ *
+ * Available variables:
+ * - type: The node bundle, either 'service_alert' or 'news'.
+ * - title: The service alert heading (used when type is 'service_alert').
+ * - hero_image: Rendered hero image markup (used for news).
+ * - body: The filtered node body markup.
+ * - view_link: Link to view the full node.
+ * - site_name: The name of the site sending the message.
+ * - unsubscribe: Link allowing the recipient to unsubscribe.
+ * - learn: Link to learn more about these alerts.
+ *
+ * @ingroup themeable
+ */
+#}
+{% if type == 'service_alert' %}
+  <h2>{{ title }}</h2>
+{% else %}
+  <div>{{ hero_image }}</div>
+{% endif %}
+{{ body }}
+<p>{{ view_link }}</p>
+<br /><br />
+---------
+<br /><br />
+<p>{{ 'This is an automated message from'|t }} {{ site_name }}</p>
+<p>{{ unsubscribe }}</p>
+<p>{{ learn }}</p>

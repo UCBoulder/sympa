@@ -15,6 +15,26 @@ use Drupal\image\Entity\ImageStyle;
 use Drupal\Component\Utility\Html;
 
 /**
+ * Implements hook_theme().
+ */
+function sympa_theme($existing, $type, $theme, $path) {
+  return [
+    'sympa_email' => [
+      'variables' => [
+        'type' => NULL,
+        'title' => NULL,
+        'hero_image' => NULL,
+        'body' => NULL,
+        'view_link' => NULL,
+        'site_name' => NULL,
+        'unsubscribe' => NULL,
+        'learn' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
  * Implements hook_mail().
  */
 function sympa_mail($key, &$message, $params) {
@@ -122,42 +142,29 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $img_ta
   $unsubscribe_news = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_n)->toString() : '';
   $unsubscribe_service_alert = $service == 'sympa' ? Link::fromTextAndUrl(t('Unsubscribe now'), $unsubscribe_sa)->toString() : '';
   $learn = $service == 'sympa' ? Link::fromTextAndUrl(t('Learn more about these alerts'), $more_info)->toString() : '';
-  $body_news = sprintf(
-    '<div>%s</div>
-    %s
-    <p>%s</p>
-    <br /><br />
-    ---------
-    <br /><br />
-    <p>%s %s</p>
-    <p>%s</p>
-    <p>%s</p>',
-    $hero_image,
-    $body_stripped,
-    Link::fromTextAndUrl(t('View news story here'), $here)->toString(),
-    t('This is an automated message from'),
-    $config->get('name'),
-    $unsubscribe_news,
-    $learn
-  );
-  $body_sa = sprintf(
-    '<h2>%s</h2>
-    %s
-    <p>%s</p>
-    <br /><br />
-    ---------
-    <br /><br />
-    <p>%s %s</p>
-    <p>%s</p>
-    <p>%s</p>',
-    $sympa_title,
-    $body_stripped,
-    Link::fromTextAndUrl(t('View full service alert here'), $here)->toString(),
-    t('This is an automated message from'),
-    $config->get('name'),
-    $unsubscribe_service_alert,
-    $learn
-  );
+  $renderer = \Drupal::service('renderer');
+  $build_news = [
+    '#theme' => 'sympa_email',
+    '#type' => 'news',
+    '#hero_image' => Markup::create($hero_image),
+    '#body' => Markup::create($body_stripped),
+    '#view_link' => Link::fromTextAndUrl(t('View news story here'), $here)->toString(),
+    '#site_name' => $config->get('name'),
+    '#unsubscribe' => $unsubscribe_news,
+    '#learn' => $learn,
+  ];
+  $build_sa = [
+    '#theme' => 'sympa_email',
+    '#type' => 'service_alert',
+    '#title' => $sympa_title,
+    '#body' => Markup::create($body_stripped),
+    '#view_link' => Link::fromTextAndUrl(t('View full service alert here'), $here)->toString(),
+    '#site_name' => $config->get('name'),
+    '#unsubscribe' => $unsubscribe_service_alert,
+    '#learn' => $learn,
+  ];
+  $body_news = $renderer->renderInIsolation($build_news);
+  $body_sa = $renderer->renderInIsolation($build_sa);
   $config = \Drupal::config('sympa.settings');
   $prod_email = $config->get('sympa_email_prod');
   switch ($service) {
@@ -174,7 +181,7 @@ function sympa_build_email($type, $sympa_nid, $sympa_title, $sympa_body, $img_ta
   }
   $params = [];
   $params['to'] = $to_email;
-  $params['body'] = Markup::create($type == 'service_alert' ? $body_sa : $body_news);
+  $params['body'] = $type == 'service_alert' ? $body_sa : $body_news;
   $params['title'] = $sympa_title;
   sympa_send('node-update', $params);
   \Drupal::logger('sympa')->notice('Sympa email sent to: ' . $to_email . ' regarding node: ' . $sympa_nid);
