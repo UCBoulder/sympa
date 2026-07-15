@@ -7,6 +7,8 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Sympa's send-on-save behavior for news and service_alert nodes.
@@ -15,9 +17,9 @@ use Drupal\node\Entity\NodeType;
  * a single send with the flag reset persisted (Finding 1), no re-send on a
  * subsequent save with the flag already clear (Finding 1), and no crash on
  * an empty body (Finding 2).
- *
- * @group sympa
  */
+#[Group('sympa')]
+#[RunTestsInSeparateProcesses]
 class SympaEmailTest extends KernelTestBase {
 
   /**
@@ -57,8 +59,8 @@ class SympaEmailTest extends KernelTestBase {
       ->set('interface.default', 'test_mail_collector')
       ->save();
 
-    // sympa_build_email() reads system.site for the site name; give it a
-    // value so renderInIsolation() has something to work with.
+    // SympaMailer::buildEmail() reads system.site for the site name; give it
+    // a value so renderInIsolation() has something to work with.
     $this->config('system.site')
       ->set('name', 'Test Site')
       ->save();
@@ -72,7 +74,7 @@ class SympaEmailTest extends KernelTestBase {
    * The site's real bundle/field config lives in config/sync and is far
    * larger than a Kernel test needs (menu_ui, scheduler, pathauto, domain
    * access, etc.), so rather than importing it wholesale this builds only
-   * the bundles and fields sympa.module actually reads: body,
+   * the bundles and fields the sympa module actually reads: body,
    * field_sympa_send (shipped by the module's own config/install),
    * field_service_alert_status (service_alert), and field_media_hero_image
    * (news).
@@ -131,9 +133,9 @@ class SympaEmailTest extends KernelTestBase {
     ])->save();
 
     // field_media_hero_image: entity reference to media, news only.
-    // sympa_node_email_send() unconditionally calls ->isEmpty() on this
-    // field for news nodes, so it must exist on the bundle even though the
-    // tests below never populate it.
+    // SympaMailer::buildHeroImage() unconditionally calls ->isEmpty() on
+    // this field for news nodes, so it must exist on the bundle even though
+    // the tests below never populate it.
     FieldStorageConfig::create([
       'field_name' => 'field_media_hero_image',
       'entity_type' => 'node',
