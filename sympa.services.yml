@@ -1,0 +1,11 @@
+services:
+  logger.channel.sympa:
+    parent: logger.channel_base
+    arguments: ['sympa']
+
+  Drupal\sympa\SympaMailer:
+    autowire: true
+    arguments:
+      $logger: '@logger.channel.sympa'
+  sympa.mailer:
+    alias: Drupal\sympa\SympaMailer
