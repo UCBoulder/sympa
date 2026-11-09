@@ -6,8 +6,17 @@ on:
         description: 'Tag next major/minor release. Use 1.x.x scheme. Leave default iterate to auto tag the next patch version.'
         required: true
         default: 'iterate'
+  push:
+    branches:
+      - '**'
+      - '!main'
 permissions:
   contents: write
 jobs:
   release:
-    uses: UCBoulder/oitid_reusable_actions/.github/workflows/releases.yml@main
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#release')
+    uses: UCBoulder/oitid_reusable_actions/.github/workflows/releases.yml@6.0
+    with:
+      version: ${{ inputs.version || 'iterate' }}
+    secrets:
+      COMPOSER_REPO_DISPATCH_TOKEN: ${{ secrets.COMPOSER_REPO_DISPATCH_TOKEN }}
