@@ -1,0 +1,48 @@
+{#
+/**
+ * @file
+ * Wrapper template for e-mails sent by the sympa module.
+ *
+ * Replaces the default symfony_mailer_lite wrapper, which places the body in
+ * a table that prevents wide images from scaling down in narrow windows. This
+ * version uses a doctype, a viewport meta tag, and a simple div wrapper.
+ *
+ * Available variables:
+ * - subject: The subject.
+ * - body: The message content.
+ * - is_html: True if generating HTML output, false for plain text.
+ * - message: The $message array created and used in the mail building
+ *   procedure. Its content varies between cases, but typically contains at
+ *   least the following elements:
+ *   - id: The message identifier.
+ *   - module: The module that handles the building of the message.
+ *   - key: The key of the message.
+ *   - to: The recipient email address.
+ *   - from: The email address of the sender.
+ *   - langcode: The langcode to use to compose the e-mail.
+ *   - params: The message parameters.
+ * - base_url: The site base url including scheme, without trailing slash.
+ *
+ * The attributes variable is intentionally not printed.
+ *
+ * @see template_preprocess()
+ * @see template_preprocess_symfony_mailer_lite_email()
+ *
+ * @ingroup themeable
+ */
+#}
+{% if is_html %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ subject }}</title>
+</head>
+<body>
+<div style="max-width:862px;margin:0 auto;">{{ body }}</div>
+</body>
+</html>
+{% else %}
+{{ body }}
+{% endif %}
