@@ -27,6 +27,10 @@ class ThemeHooks {
           'learn' => NULL,
         ],
       ],
+      // Overrides the symfony_mailer_lite wrapper for sympa emails only.
+      'symfony_mailer_lite_email__sympa' => [
+        'base hook' => 'symfony_mailer_lite_email',
+      ],
     ];
   }
 

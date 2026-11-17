@@ -27,6 +27,11 @@ class SympaMailer {
 
   use StringTranslationTrait;
 
+  /**
+   * Width in pixels of the hero image (the fn_large image style).
+   */
+  const HERO_IMAGE_WIDTH = 862;
+
   public function __construct(
     protected ConfigFactoryInterface $configFactory,
     protected EntityTypeManagerInterface $entityTypeManager,
@@ -108,7 +113,8 @@ class SympaMailer {
       return '';
     }
     $alt = $image_field->alt ?? '';
-    return '<img src="' . Html::escape($url) . '" alt="' . Html::escape($alt) . '" style="max-width:100%;height:auto;" /><br /><br />';
+    $width = self::HERO_IMAGE_WIDTH;
+    return '<img src="' . Html::escape($url) . '" alt="' . Html::escape($alt) . '" width="' . $width . '" style="display:block;width:100%;max-width:' . $width . 'px;height:auto;border:0;" /><br /><br />';
   }
 
   /**

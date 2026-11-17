@@ -2,11 +2,18 @@
 
 namespace Drupal\Tests\sympa\Kernel;
 
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\file\Entity\File;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use Drupal\node\NodeInterface;
+use Drupal\sympa\SympaMailer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -36,6 +43,8 @@ class SympaEmailTest extends KernelTestBase {
     'image',
     'media',
     'node',
+    'mailsystem',
+    'symfony_mailer_lite',
     'sympa',
   ];
 
@@ -57,6 +66,14 @@ class SympaEmailTest extends KernelTestBase {
     // transport so sent messages land in state and can be asserted on.
     $this->config('system.mail')
       ->set('interface.default', 'test_mail_collector')
+      ->save();
+
+    // Mailsystem picks the plugins: capture messages with the test collector,
+    // but format them with symfony_mailer_lite as the real site does.
+    $this->config('mailsystem.settings')
+      ->set('theme', 'current')
+      ->set('defaults.sender', 'test_mail_collector')
+      ->set('defaults.formatter', 'symfony_mailer_lite')
       ->save();
 
     // SympaMailer::buildEmail() reads system.site for the site name; give it
@@ -214,6 +231,122 @@ class SympaEmailTest extends KernelTestBase {
     $mails = $this->getCapturedMails();
     $this->assertCount(1, $mails, 'A node with an empty body still sends exactly one email.');
     $this->assertSame('sympa_node-update', $mails[0]['id']);
+  }
+
+  /**
+   * The sympa wrapper template has a doctype, viewport, and no table.
+   */
+  public function testSympaWrapperTemplate(): void {
+    $message = [
+      'id' => 'sympa_node-update',
+      'module' => 'sympa',
+      'key' => 'node-update',
+      'to' => 'test@example.com',
+      'from' => 'from@example.com',
+      'langcode' => 'en',
+      'params' => ['content_type' => 'text/html', 'generate_plain' => TRUE],
+      'headers' => ['Content-Type' => 'text/html; charset=UTF-8'],
+      'subject' => 'Test subject',
+      'body' => [Markup::create('<p>Hello subscribers.</p>')],
+    ];
+    $plugin = \Drupal::service('plugin.manager.mail')->getInstance([
+      'module' => 'sympa',
+      'key' => 'node-update',
+    ]);
+    $formatted = $plugin->format($message);
+    $html = (string) $formatted['body'];
+
+    $this->assertStringContainsString('<!DOCTYPE html>', $html);
+    $this->assertStringContainsString('<meta name="viewport" content="width=device-width, initial-scale=1">', $html);
+    $this->assertStringContainsString('<title>Test subject</title>', $html);
+    $this->assertStringContainsString('<p>Hello subscribers.</p>', $html);
+    $this->assertStringNotContainsString('<table', $html);
+    $this->assertStringNotContainsString('flags=', $html);
+  }
+
+  /**
+   * The hero image has an explicit width and a scaling style.
+   */
+  public function testHeroImageMarkup(): void {
+    ImageStyle::create(['name' => 'fn_large', 'label' => 'FN Large'])->save();
+    $file = File::create(['uri' => 'public://hero.png', 'filename' => 'hero.png']);
+    $file->save();
+
+    // Minimal stand-ins for the field item lists read by buildHeroImage().
+    $media_field = new class() {
+
+      /**
+       * Reads the target ID.
+       */
+      public function __get(string $name): int {
+        return 1;
+      }
+
+      /**
+       * Whether the field is empty.
+       */
+      public function isEmpty(): bool {
+        return FALSE;
+      }
+
+    };
+    $node = $this->createMock(NodeInterface::class);
+    $node->method('get')->willReturn($media_field);
+
+    $image_field = new \stdClass();
+    $image_field->target_id = $file->id();
+    $image_field->alt = 'Alt "text"';
+    $media = new class($image_field) {
+
+      public function __construct(protected object $field) {}
+
+      /**
+       * Returns a stand-in for the image field.
+       */
+      public function get(string $name): object {
+        return new class($this->field) {
+
+          public function __construct(protected object $field) {}
+
+          /**
+           * Whether the field is empty.
+           */
+          public function isEmpty(): bool {
+            return FALSE;
+          }
+
+          /**
+           * Reads a field property.
+           */
+          public function __get(string $name): mixed {
+            return $this->field->$name;
+          }
+
+        };
+      }
+
+    };
+    $storage = $this->createMock(EntityStorageInterface::class);
+    $storage->method('load')->willReturn($media);
+    $etm = $this->createMock(EntityTypeManagerInterface::class);
+    $etm->method('getStorage')->willReturn($storage);
+
+    $mailer = new SympaMailer(
+      \Drupal::configFactory(),
+      $etm,
+      \Drupal::service('renderer'),
+      \Drupal::service('plugin.manager.mail'),
+      \Drupal::messenger(),
+      \Drupal::logger('sympa'),
+      \Drupal::currentUser(),
+      \Drupal::service('request_stack'),
+    );
+    $method = new \ReflectionMethod($mailer, 'buildHeroImage');
+    $img = $method->invoke($mailer, $node);
+
+    $this->assertStringContainsString('width="862"', $img);
+    $this->assertStringContainsString('style="display:block;width:100%;max-width:862px;height:auto;border:0;"', $img);
+    $this->assertStringContainsString('alt="Alt &quot;text&quot;"', $img);
   }
 
 }
